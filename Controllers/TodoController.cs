@@ -53,15 +53,15 @@ public class TodoController : ControllerBase
         return Ok(todos);
     }
 
-    [HttpGet("{id}")]
-    [Authorize]
-    public async Task<ActionResult<Todo>> GetTodo(long id)
-    {
-        var todo = await _todo.GetById(id);
-        if (todo == null)
-            return NotFound("Todo not found");
-        return Ok(todo);
-    }
+    // [HttpGet("{id}")]
+    // [Authorize]
+    // public async Task<ActionResult<Todo>> GetTodo(long id)
+    // {
+    //     var todo = await _todo.GetById(id);
+    //     if (todo == null)
+    //         return NotFound("Todo not found");
+    //     return Ok(todo);
+    // }
 
     [HttpPut("{id}")]
     [Authorize]
@@ -76,7 +76,7 @@ public class TodoController : ControllerBase
         var toUpdateTodo = existing with
         {
             Description = todo.Description ?? existing.Description,
-            // IsCompleted = todo.IsCompleted,
+            IsCompleted = todo.IsCompleted,
         };
         var didUpdate = await _todo.Update(toUpdateTodo);
         if (!didUpdate)

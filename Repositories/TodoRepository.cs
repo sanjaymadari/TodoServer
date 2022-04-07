@@ -44,14 +44,14 @@ public class TodoRepository : BaseRepository, ITodoRepository
 
     public async Task<List<Todo>> GetMyTodos(long UserId)
     {
-        var query = $@"SELECT * FROM ""{TableNames.todos}"" WHERE user_id = @UserId;";
+        var query = $@"SELECT * FROM ""{TableNames.todos}"" WHERE user_id = @UserId ORDER BY id;";
         using (var con = NewConnection)
             return (await con.QueryAsync<Todo>(query, new { UserId })).ToList();
     }
 
     public async Task<List<Todo>> GetTodos()
     {
-        var query = $@"SELECT * FROM ""{TableNames.todos}""";
+        var query = $@"SELECT * FROM ""{TableNames.todos}"" ORDER BY id";
         using (var con = NewConnection)
             return (await con.QueryAsync<Todo>(query)).ToList();
     }
