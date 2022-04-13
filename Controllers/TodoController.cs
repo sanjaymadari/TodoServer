@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using TodoServer.DTOs;
 using TodoServer.Models;
 using TodoServer.Repositories;
+using TodoServer.Utilities;
 
 namespace TodoServer.Controllers;
 
 [ApiController]
 [Route("api/todo")]
+[Authorize]
 public class TodoController : ControllerBase
 {
     private readonly ITodoRepository _todo;
@@ -23,53 +25,31 @@ public class TodoController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize]
     public async Task<ActionResult> CreateTodo([FromBody] TodoDTO todo)
     {
-        var id = GetCurrentUserId();
+        var currentUserId = GetCurrentUserId();
         var toCreateTodo = new Todo
         {
-            UserId = Int32.Parse(id),
+            UserId = currentUserId,
             Description = todo.Description,
         };
         var createdTodo = await _todo.Create(toCreateTodo);
         return Ok("Created");
     }
 
-    [HttpGet("mytodos")]
-    [Authorize]
-    public async Task<ActionResult<List<Todo>>> GetMyTodos()
-    {
-        var id = GetCurrentUserId();
-        var todos = await _todo.GetMyTodos(Int32.Parse(id));
-        return Ok(todos);
-    }
-
-    [HttpGet("alltodos")]
-    [Authorize]
+    [HttpGet]
     public async Task<ActionResult<List<Todo>>> GetTodos()
     {
         var todos = await _todo.GetTodos();
         return Ok(todos);
     }
 
-    // [HttpGet("{id}")]
-    // [Authorize]
-    // public async Task<ActionResult<Todo>> GetTodo(long id)
-    // {
-    //     var todo = await _todo.GetById(id);
-    //     if (todo == null)
-    //         return NotFound("Todo not found");
-    //     return Ok(todo);
-    // }
-
     [HttpPut("{id}")]
-    [Authorize]
     public async Task<ActionResult> UpdateTodo(long id, [FromBody] TodoUpdateDTO todo)
     {
         var existing = await _todo.GetById(id);
         var currentUserId = GetCurrentUserId();
-        if(Int32.Parse(currentUserId) != existing.UserId)
+        if (currentUserId != existing.UserId)
             return Unauthorized("Your not authorized to update.");
         if (existing == null)
             return NotFound("Todo not found");
@@ -85,30 +65,27 @@ public class TodoController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize]
     public async Task<ActionResult> DeleteTodo(long id)
     {
         var todo = await _todo.GetById(id);
         var currentUserId = GetCurrentUserId();
-        if(Int32.Parse(currentUserId) != todo.UserId)
+        if (currentUserId != todo.UserId)
             return Unauthorized("Your not authorized to delete.");
 
-        if(todo == null)
+        if (todo == null)
             return NotFound("Todo not found");
         var didDelete = await _todo.Delete(id);
-        if(!didDelete)
+        if (!didDelete)
             return StatusCode(StatusCodes.Status500InternalServerError, "Could not delete todo");
         return Ok("Deleted");
     }
 
-    private string GetCurrentUserId()
+    private long GetCurrentUserId()
     {
-        var identity = HttpContext.User.Identity as ClaimsIdentity;
+        // var identity = HttpContext.User.Identity as ClaimsIdentity;
 
-        var userClaims = identity.Claims;
+        var userClaims = User.Claims;
 
-        return (userClaims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
-
+        return Int64.Parse(userClaims.FirstOrDefault(c => c.Type == TodoConstants.Id)?.Value);
     }
-
 }

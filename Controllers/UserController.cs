@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using TodoServer.DTOs;
 using TodoServer.Models;
 using TodoServer.Repositories;
+using TodoServer.Utilities;
 
 namespace TodoServer.Controllers;
 
@@ -27,7 +28,7 @@ public class UserController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<User>> Register([FromBody] UserDTO data)
     {
-        if(!IsValidEmailAddress(data.Email))
+        if (!IsValidEmailAddress(data.Email))
             return BadRequest("Invalid email address");
         var toCreateUser = new User
         {
@@ -42,14 +43,14 @@ public class UserController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult> Login([FromBody] UserLoginDTO userLogin)
     {
-        if(!IsValidEmailAddress(userLogin.Email))
+        if (!IsValidEmailAddress(userLogin.Email))
             return BadRequest("Invalid email address");
 
         var user = await _user.GetByEmail(userLogin.Email);
         if (user == null)
             return NotFound("User not found");
         if (!user.Password.Equals(userLogin.Password))
-             return Unauthorized("Invalid password");
+            return Unauthorized("Invalid password");
         var token = Generate(user);
         return Ok(token);
     }
@@ -61,15 +62,15 @@ public class UserController : ControllerBase
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Name),
-            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(TodoConstants.Id, user.Id.ToString()),
+            new Claim(TodoConstants.Name, user.Name),
+            new Claim(TodoConstants.Email, user.Email),
         };
 
         var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],
             _configuration["Jwt:Audience"],
             claims,
-            expires: DateTime.Now.AddMinutes(15),
+            expires: DateTime.Now.AddMinutes(10),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
@@ -78,15 +79,15 @@ public class UserController : ControllerBase
 
     private bool IsValidEmailAddress(string email)
     {
-    try
-    {
-        var emailChecked = new System.Net.Mail.MailAddress(email);
-        return true;
-    }
-    catch
-    {
-        return false;
-    }
+        try
+        {
+            var emailChecked = new System.Net.Mail.MailAddress(email);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
 }

@@ -51,7 +51,7 @@ public class TodoRepository : BaseRepository, ITodoRepository
 
     public async Task<List<Todo>> GetTodos()
     {
-        var query = $@"SELECT * FROM ""{TableNames.todos}"" ORDER BY id";
+        var query = $@"SELECT td.*, u.email FROM {TableNames.todos} td LEFT JOIN {TableNames.users} u ON td.user_id = u.id ORDER BY id";
         using (var con = NewConnection)
             return (await con.QueryAsync<Todo>(query)).ToList();
     }

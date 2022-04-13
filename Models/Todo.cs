@@ -13,6 +13,9 @@ public record Todo
     [JsonPropertyName("description")]
     public string Description { get; set; }
 
+    [JsonPropertyName("email")]
+    public string Email { get; set; }
+
     [JsonPropertyName("is_completed")]
     public bool IsCompleted { get; set; } = false;
 }
